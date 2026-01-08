@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Header } from "@/components/header"
-import { ThemeProvider } from "@/components/theme-provider"
 
 export default function DashboardPage() {
   const [enrolledCourses, setEnrolledCourses] = useState([])
@@ -23,21 +22,37 @@ export default function DashboardPage() {
     const enrolledIds = enrolled ? JSON.parse(enrolled) : []
     setEnrolledCourses(enrolledIds)
 
-    // Ro'yxatdan o'tgan kurslarni olish
-    fetch("https://dummyjson.com/products?limit=12")
+    fetch("https://5558ace6a3dff7ca.mokky.dev/products")
       .then((res) => res.json())
       .then((data) => {
-        const userCourses = data.products
+        let productList = []
+        if (Array.isArray(data) && data.length > 0 && data[0].products) {
+          productList = data[0].products
+        } else if (data.products && Array.isArray(data.products)) {
+          productList = data.products
+        } else if (Array.isArray(data)) {
+          productList = data
+        }
+
+        const userCourses = productList
           .filter((p) => enrolledIds.includes(p.id))
           .map((p) => {
             const progressData = localStorage.getItem(`progress_${p.id}`)
             const progress = progressData ? JSON.parse(progressData).progress : 0
+
+            const completedLessons = localStorage.getItem(`completed_lessons_${p.id}`)
+            const completed = completedLessons ? JSON.parse(completedLessons) : []
+
+            // Generate lesson count based on stock or default to 5
+            const lessonCount = Math.min(p.stock || 5, 10)
+            const calculatedProgress = completed.length > 0 ? Math.round((completed.length / lessonCount) * 100) : 0
+
             return {
               id: p.id,
-              title: p.title,
-              price: p.price,
-              rating: p.rating,
-              progress: progress,
+              title: p.name || p.title,
+              price: p.price ?? p.cost ?? 0,
+              rating: p.rating || 5,
+              progress: calculatedProgress,
               emoji: ["📚", "🎨", "💻", "📊", "🚀", "🎯"][p.id % 6],
             }
           })
@@ -45,7 +60,7 @@ export default function DashboardPage() {
         setLoading(false)
       })
       .catch((error) => {
-        console.error("Kurslar yuklashda xato:", error)
+        console.error("[v0] Kurslar yuklashda xato:", error)
         setLoading(false)
       })
   }, [router])
@@ -54,7 +69,7 @@ export default function DashboardPage() {
   const inProgressCourses = courses.filter((c) => c.progress > 0 && c.progress < 100).length
 
   return (
-    <ThemeProvider>
+    <>
       <Header />
       <main className="max-w-6xl mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold mb-8">Mening Dashboard</h1>
@@ -105,9 +120,8 @@ export default function DashboardPage() {
                   </div>
                   <div className="w-full bg-muted rounded h-2">
                     <div
-                      className={`h-2 rounded transition-all ${
-                        course.progress === 100 ? "bg-green-500" : "bg-primary"
-                      }`}
+                      className={`h-2 rounded transition-all ${course.progress === 100 ? "bg-green-500" : "bg-primary"
+                        }`}
                       style={{ width: `${course.progress}%` }}
                     ></div>
                   </div>
@@ -117,13 +131,13 @@ export default function DashboardPage() {
                   href={`/courses/${course.id}`}
                   className="w-full py-2 bg-secondary text-secondary-foreground rounded text-center font-medium hover:opacity-90 block"
                 >
-                  Davom etish
+                  {course.progress === 100 ? "Qayta o'qish" : "Davom etish"}
                 </Link>
               </div>
             ))}
           </div>
         )}
       </main>
-    </ThemeProvider>
+    </>
   )
 }
