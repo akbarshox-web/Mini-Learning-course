@@ -26,6 +26,7 @@
   0% {
     background: #0ef;
   }
+
   25% {
     background: #2c4766;
   }
@@ -86,8 +87,8 @@
   transition: 0.5s ease;
 }
 
-.input-box input:focus ~ label,
-.input-box input:valid ~ label {
+.input-box input:focus~label,
+.input-box input:valid~label {
   top: 1px;
   font-size: 0.8em;
   background-color: #1f293a;

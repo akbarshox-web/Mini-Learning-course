@@ -46,12 +46,10 @@ export default function LoginPage() {
       <Header />
       <main className="min-h-screen flex items-center justify-center">
         <div className="login-container">
-          {/* Animated background elements */}
           {[...Array(50)].map((_, i) => (
             <span key={i} style={{ "--i": i }}></span>
           ))}
 
-          {/* Login form box */}
           <div className="login-box">
             <h2>Tizimga kirish</h2>
             <form onSubmit={handleSubmit}>
